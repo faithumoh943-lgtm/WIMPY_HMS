@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WIMPY MANAGER DASHBOARD</title>
+<style>
+body{background:#0b1320;color:white;font-family:Segoe UI}
+header{background:#001;color:#0ff;padding:20px;font-size:28px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;padding:20px}
+.card{background:#111;padding:20px;border-radius:10px;text-align:center;font-size:20px}
+.big{font-size:30px;color:#0f0}
+button{padding:10px;border:none;border-radius:6px;background:#0ff;color:black;margin:10px}
+.head{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:20px;
+ background:#001;
+ padding:20px;
+}
+.logo{
+ width:70px;
+ height:70px;
+ object-fit:contain;
+ background:white;
+ border-radius:50%;
+ padding:8px;
+ box-shadow:0 0 10px #0ff;
+}
+.name{
+ font-size:26px;
+ font-weight:bold;
+ letter-spacing:3px;
+}
+.sub{
+ font-size:13px;
+ color:#0ff;
+ letter-spacing:2px;
+}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <img src="logo.png" class="logo">
+  <div>
+    <div class="name">WIMPY BEACH FRONT APARTMENT</div>
+    <div class="sub">Owner / Manager Control Panel</div>
+  </div>
+</header>
+
+<div class="grid">
+<div class="card">BAR SALES<br><span id="bar" class="big">₦0</span></div>
+<div class="card">HOTEL SALES<br><span id="hotel" class="big">₦0</span></div>
+<div class="card">EXPENSES<br><span id="exp" class="big">₦0</span></div>
+<div class="card">PROFIT<br><span id="profit" class="big">₦0</span></div>
+</div>
+
+<center>
+<button onclick="printReport()">PRINT DAILY REPORT</button>
+</center>
+
+<script>
+async function load(){
+ const bar = await fetch("http://localhost:5000/profit").then(r=>r.json());
+ const hotel = await fetch("http://localhost:5000/hotel-profit").then(r=>r.json());
+ const exp = await fetch("http://localhost:5000/expenses").then(r=>r.json());
+
+ let expenseTotal = exp.reduce((a,b)=>a+b.amount,0);
+
+ barEl.innerText = "₦"+bar.totalSales;
+ hotelEl.innerText = "₦"+hotel.hotelSales;
+ expEl.innerText = "₦"+expenseTotal;
+ profit.innerText = "₦"+(bar.totalSales + hotel.hotelSales - expenseTotal);
+}
+load();
+
+function printReport(){
+ window.print();
+}
+</script>
+</body>
+</html>

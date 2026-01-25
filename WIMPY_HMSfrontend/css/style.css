@@ -1,0 +1,97 @@
+/* ===== GLOBAL ===== */
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f7fb;
+  color: #1e293b;
+}
+
+/* ===== HEADER ===== */
+header {
+  background: linear-gradient(90deg, #0f172a, #1e40af);
+  color: white;
+  padding: 15px 25px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+header img {
+  height: 45px;
+}
+
+header h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+/* ===== CONTAINER ===== */
+.container {
+  padding: 20px;
+}
+
+/* ===== CARD ===== */
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ===== BUTTONS ===== */
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+/* ===== INPUTS ===== */
+input, select {
+  width: 100%;
+  padding: 9px;
+  margin: 6px 0 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5f5;
+}
+
+/* ===== TABLE ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #e0e7ff;
+  padding: 10px;
+  text-align: left;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+tr:hover {
+  background: #f1f5f9;
+}
+
+/* ===== STATUS COLORS ===== */
+.success { color: #16a34a; font-weight: bold; }
+.danger { color: #dc2626; font-weight: bold; }
+.warning { color: #d97706; font-weight: bold; }
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  padding: 15px;
+  color: #64748b;
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WIMPY PAYSLIP</title>
+<style>
+body{font-family:Arial;padding:20px}
+.card{border:1px solid #000;padding:15px;width:300px}
+</style>
+</head>
+<body>
+
+<div class="card" id="slip"></div>
+<button onclick="window.print()">PRINT PAYSLIP</button>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+fetch("http://localhost:5000/salary-report")
+.then(r=>r.json())
+.then(data=>{
+ const s = data.find(x=>x._id===id);
+ slip.innerHTML=`
+  <h3>WIMPY BEACH FRONT APARTMENT</h3>
+  <p>Staff: ${s.staff}</p>
+  <p>Month: ${s.month}</p>
+  <p>Amount: ₦${s.amount}</p>
+  <p>Date: ${new Date(s.date).toLocaleDateString()}</p>
+ `;
+});
+</script>
+</body>
+</html>

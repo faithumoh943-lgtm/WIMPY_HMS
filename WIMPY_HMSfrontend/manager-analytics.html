@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WIMPY HMS | Manager Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{font-family:Arial;background:#f1f5f9;margin:0}
+header{
+ background:#020617;color:white;
+ padding:15px;display:flex;align-items:center
+}
+header img{height:45px;margin-right:15px}
+.card{
+ background:white;padding:20px;margin:20px;
+ border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.1)
+}
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+ gap:20px
+}
+.stat{
+ padding:20px;border-radius:10px;color:white
+}
+.blue{background:#2563eb}
+.green{background:#16a34a}
+.purple{background:#9333ea}
+.red{background:#dc2626}
+.alert{color:#dc2626;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.png">
+  <h2>Manager Analytics Dashboard</h2>
+</header>
+
+<div class="grid">
+  <div class="stat blue" id="revenue">Revenue</div>
+  <div class="stat green" id="profit">Profit</div>
+  <div class="stat purple" id="expenses">Expenses</div>
+  <div class="stat red" id="salaries">Salaries</div>
+</div>
+
+<div class="card">
+  <h3>🔴 Low Stock Alerts</h3>
+  <div id="alerts"></div>
+</div>
+
+<script>
+const API = "http://localhost:5000";
+const role = localStorage.getItem("role");
+
+if(role !== "manager"){
+  alert("Unauthorized");
+  window.location="login.html";
+}
+
+async function loadAnalytics(){
+  const res = await fetch(API+"/manager-analytics",{
+    headers:{ role }
+  });
+  const d = await res.json();
+
+  revenue.innerHTML = "Revenue<br>₦" + d.revenue.toLocaleString();
+  profit.innerHTML = "Profit<br>₦" + d.profit.toLocaleString();
+  expenses.innerHTML = "Expenses<br>₦" + d.expenseTotal.toLocaleString();
+  salaries.innerHTML = "Salaries<br>₦" + d.salaryTotal.toLocaleString();
+
+  alerts.innerHTML = "";
+
+  d.barLowStock.forEach(i=>{
+    alerts.innerHTML += `<p class="alert">Bar: ${i.item} LOW (${i.quantity})</p>`;
+  });
+
+  d.kitchenLowStock.forEach(i=>{
+    alerts.innerHTML += `<p class="alert">Kitchen: ${i.item} LOW (${i.quantity})</p>`;
+  });
+
+  if(!alerts.innerHTML) alerts.innerHTML="All stocks OK ✅";
+}
+
+loadAnalytics();
+</script>
+
+</body>
+</html>

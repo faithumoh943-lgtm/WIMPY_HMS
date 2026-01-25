@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>WIMPY HMS Dashboard</title>
+
+<style>
+body{font-family:Arial;background:#111;color:#fff;padding:20px}
+h1,h2{color:#00ffcc}
+input,button{padding:10px;margin:5px}
+button{background:#00ffcc;border:none;cursor:pointer}
+.card{background:#222;padding:15px;border-radius:10px;margin-bottom:20px}
+.list li{margin:5px 0}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div style="display:flex;align-items:center;gap:15px;margin-bottom:20px;">
+  <img src="wimpy_logo.png" height="70">
+  <h1>WIMPY BEACH FRONT APARTMENT – BAR ACCOUNTING</h1>
+</div>
+
+<div class="card">
+<h2>Add Bar Sale</h2>
+<input id="item" placeholder="Item name">
+<input id="qty" type="number" placeholder="Qty">
+<input id="price" type="number" placeholder="Price">
+<button onclick="addSale()">Save Sale</button>
+</div>
+
+<div class="card">
+<h2>Add Expense</h2>
+<input id="etitle" placeholder="Expense title">
+<input id="eamount" type="number" placeholder="Amount">
+<button onclick="addExpense()">Save Expense</button>
+</div>
+
+<div class="card">
+<h2>Live Profit</h2>
+<h2 id="profit">₦0</h2>
+</div>
+
+<div class="card">
+<h2>Daily Closing Report</h2>
+<button onclick="loadDaily()">View Today</button>
+<pre id="daily"></pre>
+</div>
+
+<div class="card">
+<h2>Sales</h2>
+<ul id="sales" class="list"></ul>
+</div>
+
+<div class="card">
+<h2>Expenses</h2>
+<ul id="expenses" class="list"></ul>
+</div>
+
+<script>
+function load(){
+ fetch("http://localhost:5000/bar-sales").then(r=>r.json()).then(d=>{
+   sales.innerHTML="";
+   d.forEach(s=>{
+    sales.innerHTML += `<li>
+      ${s.item} x${s.qty} = ₦${s.total}
+      <button onclick="printReceipt('${s._id}')">🧾 Print</button>
+    </li>`;
+   })
+ })
+ fetch("http://localhost:5000/expenses").then(r=>r.json()).then(d=>{
+   expenses.innerHTML=""
+   d.forEach(e=>{
+    expenses.innerHTML += `<li>${e.title} - ₦${e.amount}</li>`
+   })
+ })
+ fetch("http://localhost:5000/profit").then(r=>r.json()).then(d=>{
+   profit.innerText = "₦" + d.profit
+ })
+}
+load()
+
+function addSale(){
+ fetch("http://localhost:5000/bar-sale",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    item:item.value,
+    qty:Number(qty.value),
+    price:Number(price.value),
+    total:Number(qty.value) * Number(price.value)
+  })
+ }).then(()=>load())
+}
+
+function addExpense(){
+ fetch("http://localhost:5000/add-expense",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    title:etitle.value,
+    amount:Number(eamount.value)
+  })
+ }).then(()=>load())
+}
+
+function printReceipt(id){
+ fetch("http://localhost:5000/receipt/"+id)
+ .then(r=>r.json())
+ .then(s=>{
+   const win = window.open("", "receipt");
+   win.document.write(`
+    <html>
+    <head><title>WIMPY RECEIPT</title></head>
+    <body>
+     <h2>WIMPY BEACH FRONT BAR</h2>
+     <hr>
+     Item: ${s.item}<br>
+     Qty: ${s.qty}<br>
+     Price: ₦${s.price}<br>
+     <b>Total: ₦${s.total}</b><br>
+     Date: ${new Date(s.date).toLocaleString()}
+     <hr>
+     <button onclick="window.print()">PRINT</button>
+    </body>
+    </html>
+   `);
+ });
+}
+async function loadStockAlerts(){
+  const res = await fetch(API + "/low-stock-alerts", {
+    headers:{ role }
+  });
+  const data = await res.json();
+
+  if(data.kitchen.length === 0 && data.bar.length === 0){
+    stockAlert.style.display = "none";
+    return;
+  }
+
+  stockAlert.style.display = "block";
+  stockList.innerHTML = "";
+
+  data.kitchen.forEach(i=>{
+    stockList.innerHTML += `
+      <li style="color:red;font-weight:bold;">
+        🍳 Kitchen: ${i.item} — ONLY ${i.quantity} LEFT
+      </li>
+    `;
+  });
+
+  data.bar.forEach(i=>{
+    stockList.innerHTML += `
+      <li style="color:red;font-weight:bold;">
+        🍺 Bar: ${i.item} — ONLY ${i.quantity} LEFT
+      </li>
+    `;
+  });
+}
+
+// call on load
+loadStockAlerts();
+setInterval(loadStockAlerts, 30000); // refresh every 30s
+
+async function loadProfit(){
+  const res = await fetch(API + "/profit-breakdown", {
+    headers:{ role }
+  });
+  const p = await res.json();
+
+  profitData.innerHTML = `
+    <p>🍺 Bar Revenue: ₦${p.bar.revenue}</p>
+    <p>🍺 Bar Profit: <b>₦${p.bar.profit}</b></p>
+
+    <p>🍳 Kitchen Revenue: ₦${p.kitchen.revenue}</p>
+    <p>🍳 Kitchen Cost: ₦${p.kitchen.cost}</p>
+    <p>🍳 Kitchen Profit: <b>₦${p.kitchen.profit}</b></p>
+
+    <p>🏨 Hotel Revenue: ₦${p.hotel.revenue}</p>
+
+    <p>💸 Expenses: ₦${p.expenses}</p>
+
+    <hr>
+    <h3 style="color:green;">
+      💰 TOTAL PROFIT: ₦${p.totalProfit}
+    </h3>
+  `;
+}
+
+loadProfit();
+let revenueChart;
+let profitChart;
+
+async function loadCharts(){
+  const res = await fetch(API + "/profit-breakdown", {
+    headers:{ role }
+  });
+  const data = await res.json();
+
+  // ---------- REVENUE CHART ----------
+  const revenueData = {
+    labels: ["Bar", "Kitchen", "Hotel"],
+    datasets: [{
+      label: "Revenue (₦)",
+      data: [
+        data.bar.revenue,
+        data.kitchen.revenue,
+        data.hotel.revenue
+      ],
+      backgroundColor: [
+        "#2563eb",
+        "#16a34a",
+        "#9333ea"
+      ]
+    }]
+  };
+
+  if(revenueChart) revenueChart.destroy();
+  revenueChart = new Chart(
+    document.getElementById("revenueChart"),
+    { type:"pie", data: revenueData }
+  );
+
+  // ---------- PROFIT CHART ----------
+  const profitData = {
+    labels: ["Bar Profit", "Kitchen Profit"],
+    datasets: [{
+      label: "Profit (₦)",
+      data: [
+        data.bar.profit,
+        data.kitchen.profit
+      ],
+      backgroundColor: [
+        "#22c55e",
+        "#f97316"
+      ]
+    }]
+  };
+
+  if(profitChart) profitChart.destroy();
+  profitChart = new Chart(
+    document.getElementById("profitChart"),
+    { type:"bar", data: profitData }
+  );
+}
+
+loadCharts();
+
+</script>
+<div class="card">
+  <h2>Sales Summary</h2>
+  <p>Bar Sales: ₦<span id="barTotal">0</span></p>
+  <p>Kitchen Sales: ₦<span id="kitchenTotal">0</span></p>
+  <h3>Total: ₦<span id="grandTotal">0</span></h3>
+</div>
+
+<div class="card">
+  <h2 class="danger">⚠ Stock Alerts</h2>
+  <table id="alertTable">
+    <tr>
+      <th>Item</th>
+      <th>Department</th>
+      <th>Qty</th>
+      <th>Minimum</th>
+    </tr>
+  </table>
+</div>
+<div class="card" id="stockAlert" style="display:none; border-left:6px solid red;">
+  <h2 style="color:red;">⚠ LOW STOCK ALERT</h2>
+  <ul id="stockList"></ul>
+</div>
+<div class="card">
+  <h2>📊 Profit Breakdown</h2>
+  <div id="profitData"></div>
+</div>
+<div class="card">
+  <h2>📈 Revenue Distribution</h2>
+  <canvas id="revenueChart"></canvas>
+</div>
+
+<div class="card">
+  <h2>💰 Profit Breakdown</h2>
+  <canvas id="profitChart"></canvas>
+</div>
+<div class="card">
+  <h2>📊 Monthly Revenue Trend</h2>
+
+  <select id="trendYear" onchange="loadMonthlyTrend()">
+    <option value="2024">2024</option>
+    <option value="2025" selected>2025</option>
+    <option value="2026">2026</option>
+  </select>
+
+  <canvas id="monthlyTrend"></canvas>
+</div>
+
+</body>
+</html>

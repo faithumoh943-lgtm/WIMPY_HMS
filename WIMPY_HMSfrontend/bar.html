@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WIMPY BAR POS</title>
+<style>
+body{background:#111;color:white;font-family:Segoe UI;margin:0}
+header{background:#550000;padding:20px;text-align:center;font-size:28px;font-weight:bold}
+.container{padding:20px}
+input,button{padding:10px;margin:5px;border-radius:5px;border:none}
+button{background:green;color:white;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:20px}
+th,td{border-bottom:1px solid #555;padding:10px;text-align:center}
+.print{background:orange}
+.report{background:blue}
+.head{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:20px;
+ background:#001;
+ padding:20px;
+}
+.logo{
+ width:70px;
+ height:70px;
+ object-fit:contain;
+ background:white;
+ border-radius:50%;
+ padding:8px;
+ box-shadow:0 0 10px #0ff;
+}
+.name{
+ font-size:26px;
+ font-weight:bold;
+ letter-spacing:3px;
+}
+.sub{
+ font-size:13px;
+ color:#0ff;
+ letter-spacing:2px;
+}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <img src="logo.png" class="logo">
+  <div>
+    <div class="name">WIMPY BAR POS</div>
+  </div>
+</header>
+
+
+<div class="container">
+<input id="item" placeholder="Drink Name">
+<input id="qty" type="number" placeholder="Qty">
+<input id="price" type="number" placeholder="Total Price">
+<button onclick="addSale()">SELL</button>
+
+<h3>Today's Sales</h3>
+<table>
+<thead><tr><th>Drink</th><th>Qty</th><th>Total</th><th>Print</th></tr></thead>
+<tbody id="sales"></tbody>
+</table>
+
+<h2 id="profit"></h2>
+<button class="report" onclick="dailyReport()">Print Daily Report</button>
+</div>
+
+<script>
+function loadSales(){
+ fetch("http://localhost:5000/bar-sales")
+ .then(r=>r.json())
+ .then(data=>{
+  let total=0;
+  sales.innerHTML="";
+  data.forEach(s=>{
+    total+=s.total;
+    sales.innerHTML+=`
+      <tr>
+       <td>${s.item}</td>
+       <td>${s.qty}</td>
+       <td>₦${s.total}</td>
+       <td><button class="print" onclick="printReceipt('${s._id}')">Print</button></td>
+      </tr>
+    `;
+  });
+  profit.innerText="TODAY SALES: ₦"+total;
+ });
+}
+
+function addSale(){
+ fetch("http://localhost:5000/bar-sale",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    item:item.value,
+    qty:Number(qty.value),
+    total:Number(price.value)
+  })
+ }).then(()=>loadSales());
+}
+
+function printReceipt(id){
+ fetch("http://localhost:5000/receipt/"+id)
+ .then(r=>r.json())
+ .then(s=>{
+  const w = window.open("","Receipt","width=300,height=500");
+  w.document.write(`
+    <h3>WIMPY BAR</h3>
+    <p>Drink: ${s.item}</p>
+    <p>Qty: ${s.qty}</p>
+    <p>Total: ₦${s.total}</p>
+    <p>Date: ${new Date(s.date).toLocaleString()}</p>
+    <hr>
+    <center>THANK YOU</center>
+  `);
+  w.print();
+ });
+}
+
+function dailyReport(){
+ fetch("http://localhost:5000/profit")
+ .then(r=>r.json())
+ .then(p=>{
+  const w = window.open("","Report","width=300,height=600");
+  w.document.write(`
+    <h3>WIMPY DAILY REPORT</h3>
+    <p>Total Sales: ₦${p.totalSales}</p>
+    <p>Total Expenses: ₦${p.totalExpenses}</p>
+    <h2>PROFIT: ₦${p.profit}</h2>
+  `);
+  w.print();
+ });
+}
+
+loadSales();
+
+fetch("http://localhost:5000/bar-sales",{
+  headers:{
+    role: localStorage.getItem("role")
+  }
+})
+.then(res=>res.json())
+.then(data=>{
+  console.log(data);
+});
+
+</script>
+</body>
+</html>

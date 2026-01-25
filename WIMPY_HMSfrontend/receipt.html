@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Wimpy Receipt</title>
+<style>
+body{font-family:Arial;padding:20px}
+.card{border:1px solid #000;padding:15px;width:300px}
+</style>
+</head>
+<body>
+
+<div class="card" id="rec"></div>
+<button onclick="window.print()">PRINT RECEIPT</button>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+fetch("http://localhost:5000/receipt/"+id)
+.then(r=>r.json())
+.then(d=>{
+ document.getElementById("rec").innerHTML = `
+  <h3>WIMPY BEACH FRONT APARTMENT</h3>
+  <p>Date: ${new Date(d.date).toLocaleString()}</p>
+  <hr>
+  <p>Room/Bar: ${d.room || "BAR"}</p>
+  <p>Amount: ₦${d.total || d.amount}</p>
+  <p>Thank you for choosing Wimpy</p>
+ `;
+});
+</script>
+</body>
+</html>

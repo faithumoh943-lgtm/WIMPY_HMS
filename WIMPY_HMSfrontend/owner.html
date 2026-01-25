@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WIMPY MONTHLY REPORT</title>
+<style>
+body{font-family:Arial;background:#111;color:white;padding:20px}
+input,button{padding:10px;border-radius:5px;border:none}
+button{background:#00ff99}
+.card{background:#222;padding:20px;margin-top:20px;border-radius:10px}
+</style>
+</head>
+<body>
+
+<h2>WIMPY OWNER MONTHLY STATEMENT</h2>
+
+<input id="month" placeholder="2026-01">
+<button onclick="load()">Generate</button>
+
+<div class="card" id="report"></div>
+
+<script>
+function load(){
+ fetch("http://localhost:5000/monthly-report/"+month.value)
+ .then(r=>r.json())
+ .then(r=>{
+  report.innerHTML=`
+   <h3>MONTH: ${month.value}</h3>
+   <p>Bar Sales: ₦${r.barTotal}</p>
+   <p>Hotel Sales: ₦${r.hotelTotal}</p>
+   <p>Expenses: ₦${r.expenseTotal}</p>
+   <p>Salaries: ₦${r.salaryTotal}</p>
+   <hr>
+   <h2>GROSS: ₦${r.gross}</h2>
+   <h2>PROFIT: ₦${r.profit}</h2>
+  `;
+ });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WIMPY BEACHFRONT APARTMENT</title>
+
+<style>
+body{
+ margin:0;
+ font-family:Segoe UI;
+ background:linear-gradient(135deg,#002244,#0055aa);
+ color:white;
+}
+.headerFlex{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:20px;
+ padding:20px;
+ background:#001933;
+ box-shadow:0 3px 10px rgba(0,0,0,.6);
+}
+.logo{
+ height:70px;
+ width:70px;
+ object-fit:contain;
+ background:white;
+ padding:8px;
+ border-radius:50%;
+ box-shadow:0 4px 10px rgba(0,0,0,.5);
+}
+.hotelName{
+ font-size:30px;
+ letter-spacing:3px;
+ font-weight:bold;
+}
+.subtitle{
+ font-size:14px;
+ opacity:.8;
+}
+.container{
+ max-width:1100px;
+ margin:auto;
+ background:white;
+ color:black;
+ padding:20px;
+ border-radius:12px;
+ margin-top:20px;
+ box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+input,select,button{
+ padding:10px;
+ border-radius:6px;
+ border:1px solid #ccc;
+ margin:5px;
+}
+button{
+ background:#0044cc;
+ color:white;
+ cursor:pointer;
+}
+table{
+ width:100%;
+ border-collapse:collapse;
+ margin-top:20px;
+}
+th,td{
+ padding:10px;
+ border-bottom:1px solid #ccc;
+ text-align:center;
+}
+th{
+ background:#003366;
+ color:white;
+}
+.printBtn{
+ background:green;
+ color:white;
+ padding:6px 12px;
+ border:none;
+ border-radius:5px;
+ cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="headerFlex">
+ <img src="logo.png" class="logo">
+ <div>
+  <div class="hotelName">WIMPY BEACHFRONT APARTMENT</div>
+  <div class="subtitle">Front Desk Management System</div>
+ </div>
+</div>
+
+<div class="container">
+<h2>Guest Check-In</h2>
+
+<input id="gname" placeholder="Guest Name">
+<input id="gphone" placeholder="Phone">
+<select id="groom"></select>
+<input id="gamount" type="number" placeholder="Room Amount">
+<button onclick="checkIn()">Check In</button>
+
+<h2>Guests</h2>
+<table>
+<thead>
+<tr>
+ <th>Name</th>
+ <th>Room</th>
+ <th>Amount</th>
+ <th>Status</th>
+ <th>Print</th>
+ <th>Checkout</th>
+</tr>
+</thead>
+<tbody id="guestTable"></tbody>
+</table>
+</div>
+
+<script>
+function loadRooms(){
+ fetch("http://localhost:5000/rooms")
+ .then(r=>r.json())
+ .then(data=>{
+  groom.innerHTML="";
+  data.forEach(r=>{
+   if(r.status=="Available"){
+    groom.innerHTML+=`<option value="${r.number}">Room ${r.number}</option>`;
+   }
+  });
+ });
+}
+
+function loadGuests(){
+ fetch("http://localhost:5000/guests")
+ .then(r=>r.json())
+ .then(data=>{
+  guestTable.innerHTML="";
+  data.forEach(g=>{
+   guestTable.innerHTML+=`
+    <tr>
+     <td>${g.name}</td>
+     <td>${g.room}</td>
+     <td>₦${g.amount}</td>
+     <td>${g.status}</td>
+     <td><button class="printBtn" onclick="printReceipt('${g._id}')">Print</button></td>
+     <td>${g.status=="CheckedOut"?"—":`<button onclick="checkout('${g._id}')">Checkout</button>`}</td>
+    </tr>
+   `;
+  });
+ });
+}
+
+function checkIn(){
+ fetch("http://localhost:5000/check-in",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+   name:gname.value,
+   phone:gphone.value,
+   room:groom.value,
+   amount:Number(gamount.value)
+  })
+ }).then(()=>{loadRooms();loadGuests();});
+}
+
+function checkout(id){
+ fetch("http://localhost:5000/check-out/"+id,{method:"POST"})
+ .then(()=>loadGuests());
+}
+
+function printReceipt(id){
+ fetch("http://localhost:5000/receipt/"+id)
+ .then(r=>r.json())
+ .then(g=>{
+  const w = window.open("","Receipt","width=400,height=600");
+  w.document.write(`
+   <h2>WIMPY BEACH FRONT HOTEL</h2>
+   <p><b>Name:</b> ${g.name}</p>
+   <p><b>Room:</b> ${g.room}</p>
+   <p><b>Amount:</b> ₦${g.amount}</p>
+   <p><b>Status:</b> ${g.status}</p>
+   <p><b>Date:</b> ${new Date(g.checkIn).toLocaleString()}</p>
+   <hr>
+   <center>THANK YOU FOR CHOOSING WIMPY</center>
+  `);
+  w.print();
+ });
+}
+
+loadRooms();
+loadGuests();
+
+fetch("http://localhost:5000/rooms",{
+  headers:{
+    role: localStorage.getItem("role")
+  }
+})
+.then(res=>res.json())
+.then(data=>{
+  console.log(data);
+});
+
+</script>
+
+</body>
+</html>

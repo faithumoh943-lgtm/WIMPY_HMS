@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Staff Login | WIMPY HMS</title>
+<style>
+body{font-family:Arial;background:#f4f7fb}
+.card{width:350px;margin:100px auto;background:white;padding:20px;border-radius:8px}
+button{background:#2563eb;color:white;border:none;padding:10px;width:100%}
+</style>
+</head>
+<body>
+
+<div class="card">
+<h2>Staff Login</h2>
+<input id="username" placeholder="Username"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+<button onclick="login()">Login</button>
+</div>
+
+<script>
+async function login(){
+  const res = await fetch("http://localhost:5000/staff-login",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      username:username.value,
+      password:password.value
+    })
+  });
+
+  const data = await res.json();
+  if(!data.success) return alert("Invalid login");
+
+  localStorage.setItem("staffId", data.staffId);
+  localStorage.setItem("staffName", data.name);
+  location.href="staff-dashboard.html";
+}
+</script>
+<link rel="stylesheet" href="css/style.css">
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wimpy HMS | Kitchen</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header>
+  <img src="images/logo.png">
+  <h1>Kitchen Sales & Stock</h1>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Add Kitchen Sale</h2>
+    <input id="item" placeholder="Food Item">
+    <input id="qty" placeholder="Quantity">
+    <input id="price" placeholder="Unit Price">
+    <button onclick="addSale()">Save Sale</button>
+  </div>
+
+  <div class="card">
+    <h2>Today's Kitchen Sales</h2>
+    <table id="salesTable">
+      <tr>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Total</th>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  Wimpy Beach Front Apartment © 2026
+</footer>
+
+<script src="js/kitchen.js"></script>
+</body>
+</html>

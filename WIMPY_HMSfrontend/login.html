@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WIMPY HMS Login</title>
+<style>
+body{background:#111;color:#fff;font-family:Arial;text-align:center;padding-top:100px}
+input{padding:10px;margin:10px;width:200px}
+button{padding:10px 20px;background:#00ffcc;border:none}
+</style>
+</head>
+<body>
+
+<h2>WIMPY HMS MANAGER LOGIN</h2>
+
+<input id="u" placeholder="Username"><br>
+<input id="p" type="password" placeholder="Password"><br>
+<button onclick="login()">LOGIN</button>
+
+<script>
+async function login(){
+  const res = await fetch("http://localhost:5000/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      username:username.value,
+      password:password.value
+    })
+  });
+
+  const data = await res.json();
+
+  if(!data.success) return alert("Login Failed");
+
+  localStorage.setItem("role", data.role);
+
+  if(data.role==="manager") location.href="dashboard.html";
+  if(data.role==="frontdesk") location.href="hotel.html";
+  if(data.role==="bar") location.href="bar.html";
+  if(data.role==="accountant") location.href="report.html";
+}
+</script>
+
+</body>
+</html>

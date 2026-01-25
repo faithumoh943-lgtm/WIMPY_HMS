@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WIMPY HMS | Payroll</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#f4f7fb;
+  margin:0;
+}
+header{
+  background:#1e293b;
+  color:white;
+  padding:15px;
+  display:flex;
+  align-items:center;
+}
+header img{
+  height:50px;
+  margin-right:15px;
+}
+.container{
+  padding:20px;
+}
+.card{
+  background:white;
+  padding:15px;
+  margin-bottom:20px;
+  border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+h2{color:#1e293b}
+input, select, button{
+  padding:8px;
+  margin:5px 0;
+  width:100%;
+}
+button{
+  background:#2563eb;
+  color:white;
+  border:none;
+  cursor:pointer;
+  border-radius:5px;
+}
+button:hover{background:#1d4ed8}
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  padding:8px;
+  border-bottom:1px solid #ddd;
+}
+th{
+  background:#e2e8f0;
+}
+.small-btn{
+  width:auto;
+  padding:6px 10px;
+  font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.png" alt="Wimpy Logo">
+  <h1>Payroll Management</h1>
+</header>
+
+<div class="container">
+
+<!-- ADD STAFF -->
+<div class="card">
+<h2>Add Staff</h2>
+<input id="staffName" placeholder="Staff Name">
+<input id="staffRole" placeholder="Role">
+<input id="staffSalary" placeholder="Monthly Salary">
+<button onclick="addStaff()">Add Staff</button>
+</div>
+
+<!-- STAFF LIST -->
+<div class="card">
+<h2>Staff List</h2>
+<table id="staffTable">
+<tr>
+  <th>Name</th>
+  <th>Role</th>
+  <th>Salary</th>
+  <th>Clock In</th>
+</tr>
+</table>
+</div>
+
+<!-- PAY SALARY -->
+<div class="card">
+<h2>Pay Salary</h2>
+<select id="salaryStaff"></select>
+<input id="salaryAmount" placeholder="Amount Paid">
+<button onclick="paySalary()">Pay Salary</button>
+</div>
+
+<!-- SALARY REPORT -->
+<div class="card">
+<h2>Salary Payments</h2>
+<table id="salaryTable">
+<tr>
+  <th>Staff</th>
+  <th>Amount</th>
+  <th>Date</th>
+  <th>Payslip</th>
+</tr>
+</table>
+</div>
+
+<!-- ADD DEBIT -->
+<div class="card">
+<h2>Add Penalty / Debit</h2>
+<input id="debitStaff" placeholder="Staff ID">
+<input id="debitReason" placeholder="Reason">
+<input id="debitAmount" placeholder="Amount">
+<input id="debitMonth" placeholder="YYYY-MM">
+<button onclick="addDebit()">Save Debit</button>
+</div>
+
+</div>
+<div class="card">
+<h2>Monthly Payroll Summary</h2>
+<input id="reportMonth" placeholder="YYYY-MM">
+<button onclick="printPayroll()">Generate PDF</button>
+</div>
+
+
+<script>
+const API = "http://localhost:5000";
+const role = localStorage.getItem("role") || "manager";
+
+/* ================= ADD STAFF ================= */
+async function addStaff(){
+  await fetch(API+"/add-staff",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      role
+    },
+    body:JSON.stringify({
+      name:staffName.value,
+      role:staffRole.value,
+      salary:Number(staffSalary.value)
+    })
+  });
+  loadStaff();
+}
+
+/* ================= LOAD STAFF ================= */
+async function loadStaff(){
+  const res = await fetch(API+"/staff",{headers:{role}});
+  const data = await res.json();
+
+  staffTable.innerHTML = `
+    <tr>
+      <th>Name</th><th>Role</th><th>Salary</th><th>Clock In</th>
+    </tr>
+  `;
+  salaryStaff.innerHTML = "";
+
+  data.forEach(s=>{
+    staffTable.innerHTML += `
+      <tr>
+        <td>${s.name}</td>
+        <td>${s.role}</td>
+        <td>₦${s.salary}</td>
+        <td>
+          <button class="small-btn" onclick="clockIn('${s._id}')">Clock In</button>
+        </td>
+      </tr>
+    `;
+    salaryStaff.innerHTML += `<option value="${s._id}">${s.name}</option>`;
+  });
+}
+
+/* ================= CLOCK IN ================= */
+async function clockIn(id){
+  await fetch(API+"/clock-in",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      role
+    },
+    body:JSON.stringify({staff:id})
+  });
+  alert("Clocked In");
+}
+
+/* ================= PAY SALARY ================= */
+async function paySalary(){
+  await fetch(API+"/pay-salary",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      role
+    },
+    body:JSON.stringify({
+      staff:salaryStaff.value,
+      amount:Number(salaryAmount.value),
+      month:new Date().toISOString().slice(0,7)
+    })
+  });
+  loadSalary();
+}
+
+/* ================= LOAD SALARY ================= */
+async function loadSalary(){
+  const res = await fetch(API+"/salary-report",{headers:{role}});
+  const data = await res.json();
+
+  salaryTable.innerHTML = `
+    <tr>
+      <th>Staff</th>
+      <th>Amount</th>
+      <th>Date</th>
+      <th>Payslip</th>
+    </tr>
+  `;
+
+  data.forEach(p=>{
+    salaryTable.innerHTML += `
+      <tr>
+        <td>${p.staff?.name || p.staff}</td>
+        <td>₦${p.amount}</td>
+        <td>${new Date(p.date).toLocaleDateString()}</td>
+        <td>
+          <button class="small-btn" onclick="printPayslip('${p._id}')">
+            Print Payslip
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+/* ================= PRINT PAYSLIP (STEP 3) ================= */
+function printPayslip(id){
+  window.open(API + "/payslip/" + id, "_blank");
+}
+
+/* ================= ADD DEBIT ================= */
+async function addDebit(){
+  await fetch(API + "/add-debit",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      role
+    },
+    body: JSON.stringify({
+      staff: debitStaff.value,
+      reason: debitReason.value,
+      amount: Number(debitAmount.value),
+      month: debitMonth.value
+    })
+  });
+  alert("Debit Added");
+}
+
+/* ================= INIT ================= */
+loadStaff();
+loadSalary();
+function printPayroll(){
+  const month = reportMonth.value;
+  if(!month) return alert("Enter month");
+  window.open(API + "/payroll-summary/" + month, "_blank");
+}
+
+</script>
+
+</body>
+</html>
