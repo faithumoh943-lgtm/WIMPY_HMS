@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WIMPY HMS</title>
+</head>
+<body>
+
+<h1>WIMPY BEACHFRONT HOTEL & BAR</h1>
+
+<h2>Add Room</h2>
+<input id="rnum" placeholder="Room Number">
+<input id="rtype" placeholder="Room Type">
+<input id="rprice" type="number" placeholder="Price">
+<button onclick="addRoom()">Add Room</button>
+
+<h2>Rooms</h2>
+<ul id="rooms"></ul>
+<hr>
+<h2>Check In Guest</h2>
+<input id="gname" placeholder="Guest Name">
+<input id="gphone" placeholder="Phone">
+<input id="groom" placeholder="Room Number">
+<button onclick="checkIn()">Check In</button>
+
+<h2>Checked-In Guests</h2>
+<ul id="guests"></ul>
+
+<script>
+/* ================= ROOMS ================= */
+
+function loadRooms(){
+  fetch("http://localhost:5000/rooms")
+  .then(r=>r.json())
+  .then(data=>{
+    rooms.innerHTML="";
+    data.forEach(r=>{
+      rooms.innerHTML += `<li>${r.roomNumber} - ${r.type} - ₦${r.price} - ${r.status}</li>`;
+    });
+  });
+}
+
+function addRoom(){
+  fetch("http://localhost:5000/add-room",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      roomNumber:rnum.value,
+      type:rtype.value,
+      price:Number(rprice.value)
+    })
+  }).then(()=>{
+    rnum.value=""; rtype.value=""; rprice.value="";
+    loadRooms();
+  });
+}
+
+/* ================= GUESTS ================= */
+
+function loadGuests(){
+  fetch("http://localhost:5000/guests")
+  .then(r=>r.json())
+  .then(data=>{
+    guests.innerHTML="";
+    data.forEach(g=>{
+      guests.innerHTML += `<li>${g.name} - Room ${g.room}
+        <button onclick="checkOut('${g._id}','${g.room}')">Check Out</button>
+      </li>`;
+    });
+  });
+}
+
+function checkIn(){
+  fetch("http://localhost:5000/checkin",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      name:gname.value,
+      phone:gphone.value,
+      room:groom.value
+    })
+  }).then(()=>{
+    gname.value=""; gphone.value=""; groom.value="";
+    loadGuests();
+    loadRooms();
+  });
+}
+
+function checkOut(id,room){
+  fetch("http://localhost:5000/checkout",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id,room})
+  }).then(()=>{
+    loadGuests();
+    loadRooms();
+  });
+}
+
+/* ================= INIT ================= */
+
+loadRooms();
+loadGuests();
+</script>
+
+</body>
+</html>
