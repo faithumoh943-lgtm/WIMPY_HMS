@@ -17,7 +17,7 @@ const Guest = require("./models/Guest");
 const Staff = require("./models/Staff");
 const Attendance = require("./models/Attendance");
 const Salary = require("./models/Salary");
-const debit = require("./models/debit");
+const debit = require("./models/Debit");
 const KitchenSale = require("./models/KitchenSale");
 const KitchenStock = require("./models/KitchenStock");
 
@@ -64,7 +64,7 @@ app.post("/clock-in", authorize(["manager"]), async(req,res)=>{
 });
 
 // ================= DEBITS =================
-app.post("/add-debit", authorize(["manager","accountant"]), async(req,res)=>{
+app.post("/add-Debit", authorize(["manager","accountant"]), async(req,res)=>{
   await new Debit(req.body).save();
   res.json({ message:"Debit added" });
 });
