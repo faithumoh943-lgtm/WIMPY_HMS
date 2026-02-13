@@ -8,4 +8,4 @@ const DebitSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model("Debit", DebitSchema);
+module.exports = mongoose.model("debit", DebitSchema);

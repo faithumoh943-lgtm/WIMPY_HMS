@@ -17,7 +17,7 @@ const Guest = require("./models/Guest");
 const Staff = require("./models/Staff");
 const Attendance = require("./models/Attendance");
 const Salary = require("./models/Salary");
-const Debit = require("./models/debit");
+const debit = require("./models/debit");
 const KitchenSale = require("./models/KitchenSale");
 const KitchenStock = require("./models/KitchenStock");
 
